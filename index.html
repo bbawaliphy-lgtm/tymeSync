@@ -288,7 +288,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🕐 TimeSync</h1>
+            <h1>🕐 TimeSync by BIPLAB BAWALI</h1>
             <p>Find the perfect common time for your online classes</p>
         </header>
 
@@ -1070,27 +1070,25 @@ document.getElementById('adminEventNote').innerHTML = currentEvent.note
             const eventId = urlParams.get('event');
 
             if (view === 'student') {
-                document.getElementById('step1').style.display = 'none';
-                document.getElementById('studentView').style.display = 'block';
-document.getElementById('eventInfo').innerHTML = `
-    <strong>Class:</strong> ${currentEvent.name} <br>
-    <strong>Created by:</strong> ${currentEvent.ownerEmail} <br>
-    <span style="color:#666; font-size:0.9em;">Select your available time slots below</span>
-`;
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('studentView').style.display = 'block';
+    document.getElementById('eventInfo').innerHTML = `
+        <strong>Class:</strong> ${currentEvent.name} <br>
+        <strong>Created by:</strong> ${currentEvent.ownerEmail} <br>
+        <span style="color:#666; font-size:0.9em;">Select your available time slots below</span>
+    `;
 
+    if (eventId) {
+        document.getElementById('eventInfo').innerHTML = `
+            <strong>${currentEvent.name}</strong><br>
+            <span style="color:#666;">Created by: ${currentEvent.ownerEmail}</span><br>
+            ${currentEvent.note ? `<div style="margin-top:10px; padding:10px; background:#f8f9ff; border-left:4px solid #667eea; border-radius:6px;">
+                <strong>Note:</strong> ${currentEvent.note}
+            </div>` : ''}
+        `;
+    }
 
-                if (eventId) {
-                    document.getElementById('eventInfo').innerHTML = `
-    <strong>${currentEvent.name}</strong><br>
-    <span style="color:#666;">Created by: ${currentEvent.ownerEmail}</span><br>
-    ${currentEvent.note ? `<div style="margin-top:10px; padding:10px; background:#f8f9ff; border-left:4px solid #667eea; border-radius:6px;">
-        <strong>Note:</strong> ${currentEvent.note}
-    </div>` : ''}
-`;
-
-                }
-
-                generateTimeSlotsForDay();
+    generateTimeSlotsForDay();
 
             } else if (eventId) {
                 loadExistingEvent(eventId);
