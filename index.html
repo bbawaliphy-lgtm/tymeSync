@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TimeSync — Find Common Class Time</title>
+  <title>TimeSync - Find Common Class Time</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -227,7 +227,7 @@
   </div>
 
   <footer style="max-width:1000px; margin:24px auto 0; text-align:center; color:#f0f0f0; font-size:0.95em;">
-    © 2025 TimeSync — Developed by <strong>Biplab Bawali</strong>. All Rights Reserved.
+    © 2025 TimeSync - Developed by <strong>Biplab Bawali</strong>. All Rights Reserved.
   </footer>
 
   <script type="module">
@@ -289,7 +289,7 @@
         hide(document.getElementById('adminBar'));
         return;
       }
-      document.getElementById('adminWho').textContent = \`Signed in as \${user.email}\`;
+      document.getElementById('adminWho').textContent = `Signed in as ${user.email}`;
       show(document.getElementById('adminBar'));
       show(document.getElementById('step1'));
       hide(document.getElementById('authGate'));
@@ -341,18 +341,18 @@
         wrapper.className = 'event-history-item';
 
         const info = document.createElement('div');
-        const shareLink = \`\${basePath}?event=\${evt.id}&view=student\`;
-        info.innerHTML = \`
-          <h4>\${evt.name}</h4>
-          <p>Created: \${new Date(evt.createdAt).toLocaleString()}</p>
-          <p style="font-size:0.85em; color:#444;">Event ID: <strong>\${evt.id}</strong></p>
-          \${evt.note ? \`<p style="color:#777; margin-top:5px;">📝 \${evt.note}</p>\` : ''}
+        const shareLink = `${basePath}?event=${evt.id}&view=student`;
+        info.innerHTML = `
+          <h4>${evt.name}</h4>
+          <p>Created: ${new Date(evt.createdAt).toLocaleString()}</p>
+          <p style="font-size:0.85em; color:#444;">Event ID: <strong>${evt.id}</strong></p>
+          ${evt.note ? `<p style="color:#777; margin-top:5px;">📝 ${evt.note}</p>` : ''}
           <div class="event-history-actions">
-            <input type="text" value="\${shareLink}" readonly style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:.9em;" />
-            <button class="copyShareLinkBtn" data-link="\${shareLink}">Copy Link</button>
-            <button class="whShare" data-link="\${shareLink}" data-text="\${encodeURIComponent('TimeSync — ' + (evt.name||'Class'))}">WhatsApp</button>
+            <input type="text" value="${shareLink}" readonly style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:.9em;" />
+            <button class="copyShareLinkBtn" data-link="${shareLink}">Copy Link</button>
+            <button class="whShare" data-link="${shareLink}" data-text="${encodeURIComponent('TimeSync - ' + (evt.name||'Class'))}">WhatsApp</button>
           </div>
-        \`;
+        `;
         info.onclick = (e) => {
           // avoid triggering when clicking buttons/inputs
           const tag = (e.target.tagName||'').toLowerCase();
@@ -369,8 +369,8 @@
     function formatTime(hour){
       if (hour === 0) return '12 AM';
       if (hour === 12) return '12 PM';
-      if (hour < 12) return \`\${hour} AM\`;
-      return \`\${hour-12} PM\`;
+      if (hour < 12) return `${hour} AM`;
+      return `${hour-12} PM`;
     }
     function generateTimeSlots(){
       const slots = [];
@@ -378,7 +378,7 @@
         const timeString = formatTime(hour);
         const nh = (hour===23) ? 0 : hour+1;
         const nextTimeString = formatTime(nh);
-        slots.push({ time:\`\${timeString} - \${nextTimeString}\`, startHour:hour });
+        slots.push({ time:`${timeString} - ${nextTimeString}`, startHour:hour });
       }
       return slots;
     }
@@ -393,7 +393,7 @@
 
       if (!userEmail){ alert('Please enter your email'); return; }
       if (!className){ alert('Please enter a class name'); return; }
-      const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(userEmail)){ alert('Please enter a valid email address'); return; }
 
       try{
@@ -410,7 +410,7 @@
         await setDoc(doc(db,'events',eventId), currentEvent);
 
         const baseUrl = window.location.href.split('?')[0];
-        const shareLink = \`\${baseUrl}?event=\${eventId}&view=student\`;
+        const shareLink = `${baseUrl}?event=${eventId}&view=student`;
         document.getElementById('shareLink').value = shareLink;
         document.getElementById('eventName').textContent = className;
         document.getElementById('displayEventId').textContent = eventId;
@@ -555,7 +555,7 @@
 
       days.forEach(day => {
         timeSlots.forEach(s => {
-          const key = \`\${day}_\${s.startHour}\`;
+          const key = `${day}_${s.startHour}`;
           slotCounts[key] = { count:0, students:[] };
         });
       });
@@ -563,7 +563,7 @@
       responses.forEach(r => {
         days.forEach(day => {
           (r.availability[day]||[]).forEach(hour => {
-            const key = \`\${day}_\${hour}\`;
+            const key = `${day}_${hour}`;
             if (slotCounts[key]){
               slotCounts[key].count++;
               slotCounts[key].students.push(r.studentName);
@@ -591,19 +591,19 @@
       list.forEach((s, idx) => {
         const item = document.createElement('div');
         item.style.cssText = 'padding:10px; margin-bottom:8px; background:white; border-radius:8px; border-left:4px solid #667eea; display:flex; justify-content:space-between; align-items:center;';
-        item.innerHTML = \`
+        item.innerHTML = `
           <div>
-            <strong>\${idx+1}. \${s.name}</strong>
-            <span style="color:#999; font-size:0.85em;"> (\${s.phone||''})</span>
-            <span style="color:#666; font-size:0.9em; margin-left:10px;">• \${s.totalSlots} slots</span>
+            <strong>${idx+1}. ${s.name}</strong>
+            <span style="color:#999; font-size:0.85em;"> (${s.phone||''})</span>
+            <span style="color:#666; font-size:0.9em; margin-left:10px;">• ${s.totalSlots} slots</span>
             <div style="font-size:0.8em; color:#999; margin-top:3px;">
-              Submitted: \${new Date(s.submittedAt).toLocaleString()}
+              Submitted: ${new Date(s.submittedAt).toLocaleString()}
             </div>
           </div>
-          <button class="delete-btn" data-id="\${s.id}">🗑️ Delete</button>
-        \`;
+          <button class="delete-btn" data-id="${s.id}">🗑️ Delete</button>
+        `;
         item.querySelector('.delete-btn').onclick = async () => {
-          if (confirm(\`Remove response of \${s.name}?\`)){
+          if (confirm(`Remove response of ${s.name}?`)){
             await deleteDoc(doc(db,'responses', s.id));
             calculateResults();
           }
@@ -628,14 +628,14 @@
         const card = document.createElement('div');
         card.className = 'result-item ' + (idx===0 ? 'best' : '');
         const names = slot.students.length
-          ? \`<div style="margin-top:8px; font-size:.9em; color:#666;"><strong>Available students:</strong> \${slot.students.join(', ')}</div>\`
+          ? `<div style="margin-top:8px; font-size:.9em; color:#666;"><strong>Available students:</strong> ${slot.students.join(', ')}</div>`
           : '';
-        card.innerHTML = \`
-          <h3>\${slot.day} | \${slot.time}</h3>
-          <div class="availability-count">\${slot.count} out of \${total} students available (\${slot.percentage}%)</div>
-          \${idx===0 ? '<p>🏆 <strong>Best time slot recommended!</strong></p>' : ''}
-          \${names}
-        \`;
+        card.innerHTML = `
+          <h3>${slot.day} | ${slot.time}</h3>
+          <div class="availability-count">${slot.count} out of ${total} students available (${slot.percentage}%)</div>
+          ${idx===0 ? '<p>🏆 <strong>Best time slot recommended!</strong></p>' : ''}
+          ${names}
+        `;
         container.appendChild(card);
       });
     }
@@ -685,22 +685,22 @@
         document.getElementById('step2').style.display = 'block';
         document.getElementById('eventName').textContent = currentEvent.name || 'Event';
         document.getElementById('displayEventId').textContent = currentEvent.id;
-        document.getElementById('adminEventNote').innerHTML = currentEvent.note ? (\`<strong>Note:</strong> \${currentEvent.note}\`) : '';
+        document.getElementById('adminEventNote').innerHTML = currentEvent.note ? (`<strong>Note:</strong> ${currentEvent.note}`) : '';
 
         const baseUrl = window.location.href.split('?')[0];
-        document.getElementById('shareLink').value = \`\${baseUrl}?event=\${currentEvent.id}&view=student\`;
+        document.getElementById('shareLink').value = `${baseUrl}?event=${currentEvent.id}&view=student`;
 
         // Student info (if studentView visible)
         const studentInfoBlock = document.getElementById('eventInfo');
         if (studentInfoBlock && document.getElementById('studentView').style.display !== 'none'){
-          studentInfoBlock.innerHTML = \`
-            <strong>\${currentEvent.name || 'Event'}</strong><br>
-            <span style="color:#666;">Created by: \${currentEvent.ownerEmail || 'Unknown'}</span>
-            \${currentEvent.note ? \`
+          studentInfoBlock.innerHTML = `
+            <strong>${currentEvent.name || 'Event'}</strong><br>
+            <span style="color:#666;">Created by: ${currentEvent.ownerEmail || 'Unknown'}</span>
+            ${currentEvent.note ? `
               <div style="margin-top:10px; padding:10px; background:#f8f9ff; border-left:4px solid #667eea; border-radius:6px;">
-                <strong>Note:</strong> \${currentEvent.note}
-              </div>\` : ''}
-          \`;
+                <strong>Note:</strong> ${currentEvent.note}
+              </div>` : ''}
+          `;
         }
 
         listenForResponses();
@@ -761,10 +761,22 @@
       document.getElementById('submitAvailabilityBtn')?.addEventListener('click', submitAvailability);
       document.getElementById('goBackBtn')?.addEventListener('click', goBackToEvent);
 
+      // Show student list toggle
+      document.getElementById('showStudentListBtn')?.addEventListener('click', () => {
+        const container = document.getElementById('studentListContainer');
+        if (container.style.display === 'none'){
+          container.style.display = 'block';
+          document.getElementById('showStudentListBtn').textContent = '👥 Hide Students';
+        } else {
+          container.style.display = 'none';
+          document.getElementById('showStudentListBtn').textContent = '👥 Show All Students';
+        }
+      });
+
       // Share to WhatsApp (Step 2)
       document.getElementById('whatsappShareBtn')?.addEventListener('click', () => {
         const link = document.getElementById('shareLink').value;
-        const title = 'TimeSync — ' + (document.getElementById('eventName').textContent || 'Class');
+        const title = 'TimeSync - ' + (document.getElementById('eventName').textContent || 'Class');
         shareToWhatsApp(link, encodeURIComponent(title));
       });
 
