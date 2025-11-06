@@ -758,7 +758,9 @@
             try {
                 const q = query(collection(db, 'responses'), where('eventId', '==', eventId));
                 const snapshot = await getDocs(q);
-                const responses = snapshot.docs.map(doc => doc.data());
+- const responses = snapshot.docs.map(doc => doc.data());
++ const responses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
 
                 displayCalculatedResults(responses);
 
@@ -783,16 +785,18 @@
 
             // Prepare student list with their availability details
             const studentListData = responses.map(response => {
-                const totalSlots = days.reduce((sum, day) => {
-                    return sum + (response.availability[day] ? response.availability[day].length : 0);
-                }, 0);
+    const totalSlots = days.reduce((sum, day) => {
+        return sum + (response.availability[day] ? response.availability[day].length : 0);
+    }, 0);
 
-                return {
-                    name: response.studentName,
-                    submittedAt: response.submittedAt,
-                    totalSlots: totalSlots
-                };
-            });
+    return {
+        id: response.id,             // 🔥 We add this line
+        name: response.studentName,
+        submittedAt: response.submittedAt,
+        totalSlots: totalSlots
+    };
+});
+
 
             // Sort students by name
             studentListData.sort((a, b) => a.name.localeCompare(b.name));
@@ -844,26 +848,37 @@
         }
 
         function displayStudentList(studentListData) {
-            const studentListContainer = document.getElementById('studentList');
-            studentListContainer.innerHTML = '';
+    const container = document.getElementById('studentList');
+    container.innerHTML = '';
 
-            studentListData.forEach((student, index) => {
-                const studentItem = document.createElement('div');
-                studentItem.style.cssText = 'padding: 10px; margin-bottom: 8px; background: white; border-radius: 6px; border-left: 4px solid #667eea;';
+    studentListData.forEach((student, index) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding: 10px; margin-bottom: 8px; background: white; border-radius: 6px; border-left: 4px solid #667eea; display: flex; justify-content: space-between; align-items: center;';
 
-                studentItem.innerHTML = `
-                    <strong>${index + 1}. ${student.name}</strong>
-                    <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
-                        • ${student.totalSlots} time slots selected
-                    </span>
-                    <div style="font-size: 0.8em; color: #999; margin-top: 3px;">
-                        Submitted: ${new Date(student.submittedAt).toLocaleString()}
-                    </div>
-                `;
+        item.innerHTML = `
+            <div>
+                <strong>${index + 1}. ${student.name}</strong>
+                <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
+                    • ${student.totalSlots} slots
+                </span>
+                <div style="font-size: 0.8em; color: #999; margin-top: 3px;">
+                    Submitted: ${new Date(student.submittedAt).toLocaleString()}
+                </div>
+            </div>
+            <button class="delete-btn" data-id="${student.id}">🗑️ Delete</button>
+        `;
 
-                studentListContainer.appendChild(studentItem);
-            });
-        }
+        item.querySelector('.delete-btn').onclick = async () => {
+            if (confirm(`Remove response of ${student.name}?`)) {
+                await deleteDoc(doc(db, "responses", student.id));
+                calculateResults(); // Refresh automatically
+            }
+        };
+
+        container.appendChild(item);
+    });
+}
+
 
         function displayResults(slots, totalStudents) {
             const container = document.getElementById('resultsContainer');
