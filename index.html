@@ -514,10 +514,22 @@
 
                 const eventInfo = document.createElement('div');
                 eventInfo.style.flex = '1';
-                eventInfo.innerHTML = `
-                    <h4>${event.name}</h4>
-                    <p>Created: ${new Date(event.createdAt).toLocaleString()}</p>
-                    <p style="font-size: 0.8em; color: #999;">ID: ${event.id}</p>
+                const shareLink = `${window.location.origin}${window.location.pathname}?event=${event.id}&view=student`;
+
+eventInfo.innerHTML = `
+    <h4>${event.name}</h4>
+    <p>Created: ${new Date(event.createdAt).toLocaleString()}</p>
+    <p style="font-size: 0.85em; color: #444;">Event ID: <strong>${event.id}</strong></p>
+
+    <input type="text" value="${shareLink}" readonly
+        style="width: 100%; margin: 8px 0; padding: 6px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.85em;" />
+
+    <button class="copyShareLinkBtn" data-link="${shareLink}"
+        style="background:#667eea; color:white; padding:6px 12px; border-radius:5px; font-size:0.85em;">
+        Copy Share Link
+    </button>
+`;
+
                 `;
 
                 eventInfo.onclick = () => loadExistingEvent(event.id);
@@ -1077,6 +1089,13 @@ const responses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
             });
         }
 
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('copyShareLinkBtn')) {
+        const link = e.target.getAttribute('data-link');
+        navigator.clipboard.writeText(link);
+        alert('✅ Share link copied!');
+    }
+});
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
             initApp();
