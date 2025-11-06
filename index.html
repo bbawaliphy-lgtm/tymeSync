@@ -758,8 +758,8 @@
             try {
                 const q = query(collection(db, 'responses'), where('eventId', '==', eventId));
                 const snapshot = await getDocs(q);
-- const responses = snapshot.docs.map(doc => doc.data());
-+ const responses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+const responses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
 
 
                 displayCalculatedResults(responses);
