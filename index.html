@@ -374,7 +374,12 @@
             <div class="form-group">
                 <label>Your Name:</label>
                 <input type="text" id="studentName" placeholder="Enter your name" required>
-                <p style="font-size: 0.85em; color: #666; margin-top: 5px;">💡 Use the same name if you want to update your availability later</p>
+<div class="form-group">
+    <label>Your Phone Number:</label>
+    <input type="text" id="studentPhone" placeholder="e.g., 9876543210" required>
+</div>
+
+                <p style="font-size: 0.85em; color: #666; margin-top: 5px;">💡 Use the same name and number if you want to update your availability later</p>
             </div>
 
             <button id="submitAvailabilityBtn">Submit My Availability</button>
@@ -671,6 +676,12 @@
 
         async function submitAvailability() {
             const studentName = document.getElementById('studentName').value.trim();
+const studentPhone = document.getElementById('studentPhone').value.trim();
+if (!studentPhone) {
+    alert('Please enter your phone number');
+    return;
+}
+
 
             if (!studentName) {
                 alert('Please enter your name');
@@ -696,7 +707,8 @@
                 const q = query(
                     collection(db, 'responses'),
                     where('eventId', '==', eventId),
-                    where('studentName', '==', studentName)
+                    where('studentPhone', '==', studentPhone)
+
                 );
                 const existingResponses = await getDocs(q);
 
@@ -709,11 +721,13 @@
 
                 // Add new response
                 await addDoc(collection(db, 'responses'), {
-                    eventId: eventId,
-                    studentName: studentName,
-                    availability: selectedSlots,
-                    submittedAt: new Date().toISOString()
-                });
+    eventId: eventId,
+    studentName: studentName,
+    studentPhone: studentPhone,
+    availability: selectedSlots,
+    submittedAt: new Date().toISOString()
+});
+
 
                 const isUpdate = existingResponses.size > 0;
                 document.getElementById('confirmation').innerHTML = isUpdate
@@ -857,7 +871,8 @@ const responses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
         item.innerHTML = `
             <div>
-                <strong>${index + 1}. ${student.name}</strong>
+                <strong>${index + 1}. ${student.name} (${student.phone || ''})</strong>
+
                 <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
                     • ${student.totalSlots} slots
                 </span>
