@@ -40,12 +40,15 @@
     button:hover { transform: translateY(-1px); }
     button.secondary { background:#6c757d; }
 
-    .share-box { display:flex; gap:10px; margin-bottom:12px; }
-    .share-box input { flex:1; cursor:text; }
+    .share-box { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .share-box input { flex:1; cursor:text; min-width:200px; }
 
     .live-stats { background:#e7f3ff; border:1px solid #b3d9ff; padding:14px; border-radius:10px; margin:16px 0; text-align:center; }
 
     .event-info { background:#e7f3ff; border:1px solid #b3d9ff; padding:12px; border-radius:10px; margin:12px 0; text-align:center; }
+
+    .day-navigation { display:flex; justify-content:center; align-items:center; gap:15px; margin:20px 0; }
+    .day-navigation span { font-weight:700; font-size:1.1rem; min-width:120px; text-align:center; }
 
     .time-slots-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
     .time-slot { padding:12px 8px; border:2px solid #ddd; border-radius:8px; text-align:center; cursor:pointer; transition: all .2s; font-size:.95rem; }
@@ -56,12 +59,17 @@
     .result-item.best { border-color:#28a745; background:#d4edda; }
     .availability-count { font-weight:700; color:#28a745; }
 
-    .event-history-item { background:#f8f9fa; border:2px solid #e9ecef; border-radius:10px; padding:14px; margin-bottom:10px; transition:all .2s; }
+    .event-history-item { background:#f8f9fa; border:2px solid #e9ecef; border-radius:10px; padding:14px; margin-bottom:10px; transition:all .2s; cursor:pointer; }
     .event-history-item:hover { border-color:#667eea; background:#f0f4ff; transform: translateX(3px); }
 
-    .event-history-actions { display:flex; gap:8px; margin-top:8px; }
+    .event-history-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
 
-    @media (max-width: 768px) { .container{ padding:16px; } .time-slots-grid{ grid-template-columns: repeat(3,1fr);} }
+    @media (max-width: 768px) { 
+      .container{ padding:16px; } 
+      .time-slots-grid{ grid-template-columns: repeat(3,1fr);} 
+      .share-box { flex-direction:column; }
+      .share-box input { min-width:100%; }
+    }
     @media (max-width: 480px) { .time-slots-grid{ grid-template-columns: repeat(2,1fr);} }
   </style>
 </head>
@@ -170,7 +178,7 @@
       <p style="margin:10px 0; font-size:0.95em; color:#444;">
         💡 Use the <em>same name and phone number</em> for updates. This avoids duplicate entries.
       </p>
-      <p class="event-info" id="eventInfo"></p>
+      <div class="event-info" id="eventInfo"></div>
 
       <div class="day-navigation">
         <button id="prevDayBtn">← Previous Day</button>
@@ -196,11 +204,8 @@
       </p>
 
       <button id="submitAvailabilityBtn">Submit My Availability</button>
-      <div id="confirmation" class="confirmation" style="display:none;">
+      <div id="confirmation" class="confirmation" style="display:none; margin-top:15px; padding:12px; background:#d4edda; border:1px solid #28a745; border-radius:8px;">
         <p>✅ Thank you! Your availability has been recorded.</p>
-      </div>
-      <div id="editNotification" class="event-info" style="display:none; margin-top: 20px;">
-        <p>✏️ You have already submitted your availability. You can update it by submitting again.</p>
       </div>
     </div>
 
@@ -257,10 +262,9 @@
     const auth = getAuth(app);
 
     const ADMIN_ALLOWLIST = [
-  "bbawaliphy@gmail.com",
-  "titir95biplab@gmail.com"
-];
-
+      "bbawaliphy@gmail.com",
+      "titir95biplab@gmail.com"
+    ];
 
     // UI helpers
     function show(el){ if (el) el.style.display='block'; }
@@ -270,7 +274,8 @@
     let currentEvent = null;
     let currentDayIndex = 0;
     const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-    let selectedSlots = {}; days.forEach(d => selectedSlots[d] = []);
+    let selectedSlots = {}; 
+    days.forEach(d => selectedSlots[d] = []);
 
     // Local email convenience
     function saveUserEmail(email){ localStorage.setItem('timesync_user_email', email); }
@@ -316,22 +321,22 @@
 
     // Events history
     async function loadUserEvents(email){
-  if (!email){ alert('Please enter your email'); return; }
-  const normalizedEmail = email.toLowerCase().trim();
-  console.log('[TimeSync] loading events for:', normalizedEmail); // add this
-  try{
-    const qy = query(collection(db,'events'), where('ownerEmail','==', normalizedEmail));
-    const snapshot = await getDocs(qy);
-    const events = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
-    events.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    displayEventHistory(events);
-    saveUserEmail(normalizedEmail);
-  }catch(err){
-    console.error(err);
-    alert('Error loading events: ' + err.message);
-  }
-}
-
+      if (!email){ alert('Please enter your email'); return; }
+      const normalizedEmail = email.toLowerCase().trim();
+      console.log('Loading events for:', normalizedEmail);
+      try{
+        const qy = query(collection(db,'events'), where('ownerEmail','==', normalizedEmail));
+        const snapshot = await getDocs(qy);
+        console.log('Found events:', snapshot.size);
+        const events = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
+        events.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        displayEventHistory(events);
+        saveUserEmail(normalizedEmail);
+      }catch(err){
+        console.error('Error loading events:', err);
+        alert('Error loading events: ' + err.message);
+      }
+    }
 
     function displayEventHistory(events){
       const historyContainer = document.getElementById('eventHistory');
@@ -360,7 +365,6 @@
           </div>
         `;
         info.onclick = (e) => {
-          // avoid triggering when clicking buttons/inputs
           const tag = (e.target.tagName||'').toLowerCase();
           if (tag === 'button' || tag === 'input') return;
           loadExistingEvent(evt.id);
@@ -378,6 +382,7 @@
       if (hour < 12) return `${hour} AM`;
       return `${hour-12} PM`;
     }
+    
     function generateTimeSlots(){
       const slots = [];
       for (let hour=6; hour<=23; hour++){
@@ -413,6 +418,7 @@
           ownerEmail: (auth.currentUser?.email || normalizedEmail).toLowerCase(),
           createdAt: new Date().toISOString()
         };
+        console.log('Creating event:', currentEvent);
         await setDoc(doc(db,'events',eventId), currentEvent);
 
         const baseUrl = window.location.href.split('?')[0];
@@ -425,8 +431,9 @@
         document.getElementById('step2').style.display = 'block';
 
         listenForResponses();
+        alert('Event created successfully!');
       }catch(err){
-        console.error(err);
+        console.error('Error creating event:', err);
         alert('Error creating event: ' + err.message);
       }
     }
@@ -459,7 +466,9 @@
         el.className = 'time-slot';
         el.textContent = slot.time;
         el.dataset.index = idx;
-        if ((selectedSlots[currentDay]||[]).includes(slot.startHour)){ el.classList.add('selected'); }
+        if ((selectedSlots[currentDay]||[]).includes(slot.startHour)){ 
+          el.classList.add('selected'); 
+        }
         el.onclick = function(){
           this.classList.toggle('selected');
           const hour = timeSlots[idx].startHour;
@@ -488,13 +497,16 @@
       if (!eventId){ alert('Invalid event link'); return; }
 
       try{
+        console.log('Submitting availability for event:', eventId);
         // remove previous with same phone
         const qy = query(collection(db,'responses'), where('eventId','==', eventId), where('studentPhone','==', studentPhone));
         const existing = await getDocs(qy);
         await Promise.all(existing.docs.map(d => deleteDoc(d.ref)));
 
         await addDoc(collection(db,'responses'), {
-          eventId, studentName, studentPhone,
+          eventId, 
+          studentName, 
+          studentPhone,
           availability: selectedSlots,
           submittedAt: new Date().toISOString()
         });
@@ -507,12 +519,13 @@
 
         setTimeout(() => {
           document.getElementById('studentName').value = '';
+          document.getElementById('studentPhone').value = '';
           days.forEach(d => selectedSlots[d] = []);
           generateTimeSlotsForDay();
           document.getElementById('confirmation').style.display = 'none';
-        }, 2500);
+        }, 3000);
       }catch(err){
-        console.error(err);
+        console.error('Error submitting availability:', err);
         alert('Error submitting availability: ' + err.message);
       }
     }
@@ -675,6 +688,7 @@
       document.getElementById('resultsView').style.display = 'none';
       currentEvent = null;
       document.getElementById('className').value = '';
+      document.getElementById('eventNote').value = '';
       document.getElementById('existingEventId').value = '';
       selectedSlots = {}; days.forEach(d => selectedSlots[d] = []);
       document.getElementById('eventHistory').innerHTML = '';
@@ -682,16 +696,18 @@
 
     async function loadExistingEvent(eventId){
       try{
+        console.log('Loading event:', eventId);
         const ev = await getDoc(doc(db,'events', eventId));
         if (!ev.exists()){ alert('Event not found'); return; }
         currentEvent = { id: ev.id, ...ev.data() };
+        console.log('Event loaded:', currentEvent);
 
         // Admin info
         document.getElementById('step1').style.display = 'none';
         document.getElementById('step2').style.display = 'block';
         document.getElementById('eventName').textContent = currentEvent.name || 'Event';
         document.getElementById('displayEventId').textContent = currentEvent.id;
-        document.getElementById('adminEventNote').innerHTML = currentEvent.note ? (`<strong>Note:</strong> ${currentEvent.note}`) : '';
+        document.getElementById('adminEventNote').innerHTML = currentEvent.note ? `<strong>Note:</strong> ${currentEvent.note}` : '';
 
         const baseUrl = window.location.href.split('?')[0];
         document.getElementById('shareLink').value = `${baseUrl}?event=${currentEvent.id}&view=student`;
@@ -711,7 +727,7 @@
 
         listenForResponses();
       }catch(err){
-        console.error(err);
+        console.error('Error loading event:', err);
         alert('Error loading event: ' + err.message);
       }
     }
@@ -733,6 +749,7 @@
         hide(document.getElementById('step1'));
         hide(document.getElementById('step2'));
         hide(document.getElementById('resultsView'));
+        hide(document.getElementById('authGate'));
         show(document.getElementById('studentView'));
         if (eventId) await loadExistingEvent(eventId);
         generateTimeSlotsForDay();
@@ -751,12 +768,11 @@
 
     function setupEventListeners(){
       // Admin actions
+      document.getElementById('createEventBtn')?.addEventListener('click', createClassEvent);
       document.getElementById('loadHistoryBtn')?.addEventListener('click', () => {
-  const current = (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.email)
-    ? auth.currentUser.email
-    : (document.getElementById('historyEmail').value || '').trim();
-  loadUserEvents(current);
-});
+        const email = (document.getElementById('historyEmail').value||'').trim();
+        loadUserEvents(email);
+      });
       document.getElementById('accessEventBtn')?.addEventListener('click', accessExistingEvent);
       document.getElementById('copyLinkBtn')?.addEventListener('click', copyLink);
       document.getElementById('viewResultsBtn')?.addEventListener('click', viewResults);
@@ -792,8 +808,11 @@
         const target = e.target;
         if (target.classList?.contains('copyShareLinkBtn')){
           const link = target.getAttribute('data-link');
-          if (navigator.clipboard) { navigator.clipboard.writeText(link).then(()=>alert('✅ Share link copied!')); }
-          else { alert('Copy this link: ' + link); }
+          if (navigator.clipboard) { 
+            navigator.clipboard.writeText(link).then(()=>alert('✅ Share link copied!')); 
+          } else { 
+            alert('Copy this link: ' + link); 
+          }
         }
         if (target.classList?.contains('whShare')){
           const link = target.getAttribute('data-link');
@@ -813,7 +832,10 @@
             await signOut(auth);
             alert('This account is not authorized for admin access.');
           }
-        } catch (e) { alert('Login failed: ' + e.message); }
+        } catch (e) { 
+          console.error('Login error:', e);
+          alert('Login failed: ' + e.message); 
+        }
       });
 
       document.getElementById('registerBtn')?.addEventListener('click', async () => {
@@ -828,10 +850,16 @@
           }else{
             alert('Account created. You are now logged in.');
           }
-        } catch (e) { alert('Register failed: ' + e.message); }
+        } catch (e) { 
+          console.error('Register error:', e);
+          alert('Register failed: ' + e.message); 
+        }
       });
 
-      document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); });
+      document.getElementById('logoutBtn')?.addEventListener('click', async () => { 
+        await signOut(auth);
+        resetApp();
+      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
