@@ -316,20 +316,22 @@
 
     // Events history
     async function loadUserEvents(email){
-      if (!email){ alert('Please enter your email'); return; }
-      const normalizedEmail = email.toLowerCase().trim();
-      try{
-        const qy = query(collection(db,'events'), where('ownerEmail','==', normalizedEmail));
-        const snapshot = await getDocs(qy);
-        const events = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
-        events.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-        displayEventHistory(events);
-        saveUserEmail(normalizedEmail);
-      }catch(err){
-        console.error(err);
-        alert('Error loading events: ' + err.message);
-      }
-    }
+  if (!email){ alert('Please enter your email'); return; }
+  const normalizedEmail = email.toLowerCase().trim();
+  console.log('[TimeSync] loading events for:', normalizedEmail); // add this
+  try{
+    const qy = query(collection(db,'events'), where('ownerEmail','==', normalizedEmail));
+    const snapshot = await getDocs(qy);
+    const events = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
+    events.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    displayEventHistory(events);
+    saveUserEmail(normalizedEmail);
+  }catch(err){
+    console.error(err);
+    alert('Error loading events: ' + err.message);
+  }
+}
+
 
     function displayEventHistory(events){
       const historyContainer = document.getElementById('eventHistory');
@@ -749,11 +751,12 @@
 
     function setupEventListeners(){
       // Admin actions
-      document.getElementById('createEventBtn')?.addEventListener('click', createClassEvent);
       document.getElementById('loadHistoryBtn')?.addEventListener('click', () => {
-        const email = (document.getElementById('historyEmail').value||'').trim();
-        loadUserEvents(email);
-      });
+  const current = (typeof auth !== 'undefined' && auth.currentUser && auth.currentUser.email)
+    ? auth.currentUser.email
+    : (document.getElementById('historyEmail').value || '').trim();
+  loadUserEvents(current);
+});
       document.getElementById('accessEventBtn')?.addEventListener('click', accessExistingEvent);
       document.getElementById('copyLinkBtn')?.addEventListener('click', copyLink);
       document.getElementById('viewResultsBtn')?.addEventListener('click', viewResults);
