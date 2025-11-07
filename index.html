@@ -745,12 +745,28 @@
       const view = params.get('view');
       const eventId = params.get('event');
 
+      // Student view - completely separate, no auth needed
       if (view === 'student'){
+        // Hide ALL admin elements
         hide(document.getElementById('step1'));
         hide(document.getElementById('step2'));
         hide(document.getElementById('resultsView'));
         hide(document.getElementById('authGate'));
+        hide(document.getElementById('adminBar'));
+        
+        // Show only student view
         show(document.getElementById('studentView'));
+        
+        // Remove the header admin elements for students
+        const container = document.querySelector('.container');
+        if (container) {
+          const header = container.querySelector('header');
+          if (header) {
+            const adminBar = header.querySelector('#adminBar');
+            if (adminBar) adminBar.remove();
+          }
+        }
+        
         if (eventId) await loadExistingEvent(eventId);
         generateTimeSlotsForDay();
         return;
