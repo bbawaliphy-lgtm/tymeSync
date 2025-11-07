@@ -302,6 +302,7 @@
       show(document.getElementById('adminBar'));
       show(document.getElementById('step1'));
       hide(document.getElementById('authGate'));
+      hide(document.getElementById('studentView'));
       // prefill
       const email = user.email.toLowerCase();
       const ue = document.getElementById('userEmail');
@@ -316,11 +317,28 @@
       hide(document.getElementById('step1'));
       hide(document.getElementById('step2'));
       hide(document.getElementById('resultsView'));
+      hide(document.getElementById('studentView'));
       show(document.getElementById('authGate'));
+    }
+
+    // Check if user is admin - for protection
+    function isUserAdmin(){
+      const user = auth.currentUser;
+      return user && ADMIN_ALLOWLIST.includes(user.email.toLowerCase());
+    }
+
+    // Protect admin functions
+    function requireAdmin(){
+      if (!isUserAdmin()){
+        alert('This action requires admin access. Please login.');
+        return false;
+      }
+      return true;
     }
 
     // Events history
     async function loadUserEvents(email){
+      if (!requireAdmin()) return;
       if (!email){ alert('Please enter your email'); return; }
       const normalizedEmail = email.toLowerCase().trim();
       console.log('Loading events for:', normalizedEmail);
@@ -397,6 +415,8 @@
 
     // Create event
     async function createClassEvent(){
+      if (!requireAdmin()) return;
+      
       const userEmail = (document.getElementById('userEmail').value||'').trim();
       const className = document.getElementById('className').value;
       const eventNote = (document.getElementById('eventNote').value||'').trim();
@@ -531,6 +551,8 @@
     }
 
     async function viewResults(){
+      if (!requireAdmin()) return;
+      
       if (!currentEvent){
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
@@ -540,6 +562,8 @@
     }
 
     window.calculateResults = async function(){
+      if (!requireAdmin()) return;
+      
       const eventId = currentEvent ? currentEvent.id : new URLSearchParams(window.location.search).get('event');
       if (!eventId){ alert('No event selected'); return; }
       try{
@@ -702,30 +726,38 @@
         currentEvent = { id: ev.id, ...ev.data() };
         console.log('Event loaded:', currentEvent);
 
-        // Admin info
-        document.getElementById('step1').style.display = 'none';
-        document.getElementById('step2').style.display = 'block';
-        document.getElementById('eventName').textContent = currentEvent.name || 'Event';
-        document.getElementById('displayEventId').textContent = currentEvent.id;
-        document.getElementById('adminEventNote').innerHTML = currentEvent.note ? `<strong>Note:</strong> ${currentEvent.note}` : '';
+        // Check if this is admin accessing or student
+        const params = new URLSearchParams(window.location.search);
+        const view = params.get('view');
+        
+        if (view === 'student') {
+          // Student view - only show event info
+          const studentInfoBlock = document.getElementById('eventInfo');
+          if (studentInfoBlock){
+            studentInfoBlock.innerHTML = `
+              <strong>${currentEvent.name || 'Event'}</strong><br>
+              <span style="color:#666;">Created by: ${currentEvent.ownerEmail || 'Unknown'}</span>
+              ${currentEvent.note ? `
+                <div style="margin-top:10px; padding:10px; background:#f8f9ff; border-left:4px solid #667eea; border-radius:6px;">
+                  <strong>Note:</strong> ${currentEvent.note}
+                </div>` : ''}
+            `;
+          }
+        } else if (isUserAdmin()) {
+          // Admin view
+          document.getElementById('step1').style.display = 'none';
+          document.getElementById('step2').style.display = 'block';
+          document.getElementById('eventName').textContent = currentEvent.name || 'Event';
+          document.getElementById('displayEventId').textContent = currentEvent.id;
+          document.getElementById('adminEventNote').innerHTML = currentEvent.note ? `<strong>Note:</strong> ${currentEvent.note}` : '';
 
-        const baseUrl = window.location.href.split('?')[0];
-        document.getElementById('shareLink').value = `${baseUrl}?event=${currentEvent.id}&view=student`;
+          const baseUrl = window.location.href.split('?')[0];
+          document.getElementById('shareLink').value = `${baseUrl}?event=${currentEvent.id}&view=student`;
 
-        // Student info (if studentView visible)
-        const studentInfoBlock = document.getElementById('eventInfo');
-        if (studentInfoBlock && document.getElementById('studentView').style.display !== 'none'){
-          studentInfoBlock.innerHTML = `
-            <strong>${currentEvent.name || 'Event'}</strong><br>
-            <span style="color:#666;">Created by: ${currentEvent.ownerEmail || 'Unknown'}</span>
-            ${currentEvent.note ? `
-              <div style="margin-top:10px; padding:10px; background:#f8f9ff; border-left:4px solid #667eea; border-radius:6px;">
-                <strong>Note:</strong> ${currentEvent.note}
-              </div>` : ''}
-          `;
+          listenForResponses();
+        } else {
+          alert('Admin access required to view event details');
         }
-
-        listenForResponses();
       }catch(err){
         console.error('Error loading event:', err);
         alert('Error loading event: ' + err.message);
@@ -733,6 +765,8 @@
     }
 
     async function accessExistingEvent(){
+      if (!requireAdmin()) return;
+      
       const eventId = (document.getElementById('existingEventId').value||'').trim();
       if (!eventId){ alert('Please enter an Event ID'); return; }
       await loadExistingEvent(eventId);
