@@ -1,10 +1,10 @@
-const CACHE_NAME = 'timesync-v1.0.0';
+const CACHE_NAME = 'timesync-v1.0.1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192x192.png',
+  './icon-512x512.png'
 ];
 
 // Install event - cache resources
@@ -78,7 +78,7 @@ self.addEventListener('fetch', (event) => {
         }).catch((err) => {
           console.error('[Service Worker] Fetch failed:', err);
           // Return offline page or cached fallback
-          return caches.match('/index.html');
+          return caches.match('./index.html');
         });
       })
   );
@@ -103,8 +103,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'TimeSync Notification';
   const options = {
     body: data.body || 'New update available',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: './icon-192x192.png',
+    badge: './icon-72x72.png',
     vibrate: [200, 100, 200],
     data: data.url || '/'
   };
@@ -122,3 +122,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 
 });
+
