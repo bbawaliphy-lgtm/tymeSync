@@ -261,10 +261,7 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    const ADMIN_ALLOWLIST = [
-      "bbawaliphy@gmail.com",
-      "titir95biplab@gmail.com"
-    ];
+   
 
     // UI helpers
     function show(el){ if (el) el.style.display='block'; }
@@ -290,14 +287,14 @@
     }
 
     function showAdminUI(user){
-      if (!user || !ADMIN_ALLOWLIST.includes(user.email.toLowerCase())){
-        hide(document.getElementById('step1'));
-        hide(document.getElementById('step2'));
-        hide(document.getElementById('resultsView'));
-        show(document.getElementById('authGate'));
-        hide(document.getElementById('adminBar'));
-        return;
-      }
+  if (!user){
+    hide(document.getElementById('step1'));
+    hide(document.getElementById('step2'));
+    hide(document.getElementById('resultsView'));
+    show(document.getElementById('authGate'));
+    hide(document.getElementById('adminBar'));
+    return;
+  }
       document.getElementById('adminWho').textContent = `Signed in as ${user.email}`;
       show(document.getElementById('adminBar'));
       show(document.getElementById('step1'));
@@ -323,9 +320,9 @@
 
     // Check if user is admin - for protection
     function isUserAdmin(){
-      const user = auth.currentUser;
-      return user && ADMIN_ALLOWLIST.includes(user.email.toLowerCase());
-    }
+  const user = auth.currentUser;
+  return user !== null; // Any logged-in user is now an "admin"
+}
 
     // Protect admin functions
     function requireAdmin(){
@@ -808,12 +805,12 @@
 
       // Admin route (auth required)
       onAuthStateChanged(auth, (user) => {
-        if (user && ADMIN_ALLOWLIST.includes(user.email.toLowerCase())){
-          showAdminUI(user);
-        }else{
-          hideAdminUI();
-        }
-      });
+  if (user){
+    showAdminUI(user);
+  }else{
+    hideAdminUI();
+  }
+});
     }
 
     function setupEventListeners(){
@@ -873,38 +870,31 @@
 
       // Auth
       document.getElementById('loginBtn')?.addEventListener('click', async () => {
-        const email = (document.getElementById('adminEmail').value||'').trim();
-        const password = (document.getElementById('adminPassword').value||'').trim();
-        if (!email || !password) return alert('Enter email & password');
-        try {
-          const cred = await signInWithEmailAndPassword(auth, email, password);
-          if (!ADMIN_ALLOWLIST.includes(cred.user.email.toLowerCase())){
-            await signOut(auth);
-            alert('This account is not authorized for admin access.');
-          }
-        } catch (e) { 
-          console.error('Login error:', e);
-          alert('Login failed: ' + e.message); 
-        }
-      });
+  const email = (document.getElementById('adminEmail').value||'').trim();
+  const password = (document.getElementById('adminPassword').value||'').trim();
+  if (!email || !password) return alert('Enter email & password');
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // Login successful - no allowlist check needed
+  } catch (e) { 
+    console.error('Login error:', e);
+    alert('Login failed: ' + e.message); 
+  }
+});
 
       document.getElementById('registerBtn')?.addEventListener('click', async () => {
-        const email = (document.getElementById('adminEmail').value||'').trim();
-        const password = (document.getElementById('adminPassword').value||'').trim();
-        if (!email || !password) return alert('Enter email & password');
-        if (password.length < 6) return alert('Password must be at least 6 chars');
-        try {
-          const cred = await createUserWithEmailAndPassword(auth, email, password);
-          if (!ADMIN_ALLOWLIST.includes(cred.user.email.toLowerCase())){
-            alert('Account created, but this email is not on admin allowlist. Update ADMIN_ALLOWLIST in code to permit admin access.');
-          }else{
-            alert('Account created. You are now logged in.');
-          }
-        } catch (e) { 
-          console.error('Register error:', e);
-          alert('Register failed: ' + e.message); 
-        }
-      });
+  const email = (document.getElementById('adminEmail').value||'').trim();
+  const password = (document.getElementById('adminPassword').value||'').trim();
+  if (!email || !password) return alert('Enter email & password');
+  if (password.length < 6) return alert('Password must be at least 6 chars');
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    alert('Account created successfully! You are now logged in.');
+  } catch (e) { 
+    console.error('Register error:', e);
+    alert('Register failed: ' + e.message); 
+  }
+});
 
       document.getElementById('logoutBtn')?.addEventListener('click', async () => { 
         await signOut(auth);
