@@ -3,7 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+ 
+  <!-- ADD THESE LINES -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TimeSync">
+  
+  <!-- Favicon and Apple Touch Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
+  
   <title>TimeSync - Find Common Class Time</title>
+  <!-- rest of your existing code -->
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -377,6 +391,7 @@
             <input type="text" value="${shareLink}" readonly style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px; font-size:.9em;" />
             <button class="copyShareLinkBtn" data-link="${shareLink}">Copy Link</button>
             <button class="whShare" data-link="${shareLink}" data-text="${encodeURIComponent('TimeSync - ' + (evt.name||'Class'))}">WhatsApp</button>
+<button class="deleteEventBtn" data-event-id="${evt.id}" data-event-name="${evt.name}" style="background:#dc3545;">🗑️ Delete</button>
           </div>
         `;
         info.onclick = (e) => {
@@ -701,6 +716,50 @@
       document.getElementById('step2').style.display = 'block';
     }
 
+async function deleteEvent(eventId, eventName){
+  if (!requireAdmin()) return;
+  
+  const confirmMsg = `⚠️ Are you sure you want to delete the event "${eventName}"?\n\nThis will also delete ALL student responses for this event.\n\nThis action cannot be undone!`;
+  
+  if (!confirm(confirmMsg)) {
+    return;
+  }
+  
+  try {
+    console.log('Deleting event:', eventId);
+    
+    // First, delete all responses for this event
+    const responsesQuery = query(collection(db, 'responses'), where('eventId', '==', eventId));
+    const responsesSnapshot = await getDocs(responsesQuery);
+    
+    console.log(`Found ${responsesSnapshot.size} responses to delete`);
+    
+    // Delete all responses
+    const deletePromises = responsesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    
+    // Then delete the event itself
+    await deleteDoc(doc(db, 'events', eventId));
+    
+    console.log('Event deleted successfully');
+    alert('✅ Event and all responses deleted successfully!');
+    
+    // Reload the event history
+    const email = (document.getElementById('historyEmail').value || '').trim();
+    if (email) {
+      loadUserEvents(email);
+    }
+    
+    // If currently viewing this event, go back to step 1
+    if (currentEvent && currentEvent.id === eventId) {
+      resetApp();
+    }
+    
+  } catch (err) {
+    console.error('Error deleting event:', err);
+    alert('❌ Error deleting event: ' + err.message);
+  }
+}
     function resetApp(){
       window.history.replaceState({}, document.title, window.location.pathname);
       document.getElementById('step1').style.display = 'block';
@@ -866,6 +925,11 @@
           const text = target.getAttribute('data-text') || 'TimeSync Event';
           shareToWhatsApp(link, text);
         }
+if (target.classList?.contains('deleteEventBtn')){
+    const eventId = target.getAttribute('data-event-id');
+    const eventName = target.getAttribute('data-event-name');
+    deleteEvent(eventId, eventName);
+  }
       });
 
       // Auth
@@ -907,5 +971,6 @@
       initApp();
     });
   </script>
+<script src="pwa-install.js"></script>
 </body>
 </html>
